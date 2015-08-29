@@ -1,24 +1,23 @@
 package edu.hit.GithubDataModel;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-
-
-public class CreateEvent {
-
+/**
+ * 删除事件
+ * @author DHAO
+ *
+ */
+public class DeleteEvent {
+	
 	private String id;
 	private String actor;
 	private String repo;
-	/*
-	 * 只能是branch,tag,repository
+	/**
+	 * ref_type只能是branch,type
 	 */
 	private String ref_type;
-	/*
-	 * ref_type在repository中对应的具体名字
+	/**
+	 * ref_type中对应的具体名字
 	 */
 	private String ref;
-	private String description;
-	private String createdAt;
 	private String target;
 	
 	public String getId() {
@@ -51,24 +50,13 @@ public class CreateEvent {
 	public void setRef(String ref) {
 		this.ref = ref;
 	}
-	public String getDescription() {
-		return description;
-	}
-	public void setDescription(String description) {
-		this.description = description;
-	}
-	public String getCreatedAt() {
-		return createdAt;
-	}
-	public void setCreatedAt(String createdAt) {
-		this.createdAt = createdAt;
-	}
 	public String getTarget() {
 		return target;
 	}
 	public void setTarget(String target) {
 		this.target = target;
 	}
+	
 	
 	
 	

@@ -1,22 +1,23 @@
 package edu.hit.GithubDataModel;
 
-
-/**
- * 对某次commit代码进行的评论
- * @author DHAO
- *
- */
-public class CommitCommentEvent {
+public class ForkEvent {
 
 	private String id;
 	private String actor;
+	/**
+	 * fork人家的代码的repository
+	 */
 	private String repo;
-	private String html_url;
-	private String commit_id;
-	private String created_at;
-	private String body;
-	private String target;
 	
+	/**
+	 * fork到自己仓库时新建的repository信息
+	 */
+	private String forkeeName;
+	private String forkeeOwner;
+	private String forkeeDescription;
+	
+	private String created_at;
+	private String target;
 	public String getId() {
 		return id;
 	}
@@ -35,29 +36,29 @@ public class CommitCommentEvent {
 	public void setRepo(String repo) {
 		this.repo = repo;
 	}
-	public String getHtml_url() {
-		return html_url;
+	public String getForkeeName() {
+		return forkeeName;
 	}
-	public void setHtml_url(String html_url) {
-		this.html_url = html_url;
+	public void setForkeeName(String forkeeName) {
+		this.forkeeName = forkeeName;
 	}
-	public String getCommit_id() {
-		return commit_id;
+	public String getForkeeOwner() {
+		return forkeeOwner;
 	}
-	public void setCommit_id(String commit_id) {
-		this.commit_id = commit_id;
+	public void setForkeeOwner(String forkeeOwner) {
+		this.forkeeOwner = forkeeOwner;
+	}
+	public String getForkeeDescription() {
+		return forkeeDescription;
+	}
+	public void setForkeeDescription(String forkeeDescription) {
+		this.forkeeDescription = forkeeDescription;
 	}
 	public String getCreated_at() {
 		return created_at;
 	}
 	public void setCreated_at(String created_at) {
 		this.created_at = created_at;
-	}
-	public String getBody() {
-		return body;
-	}
-	public void setBody(String body) {
-		this.body = body;
 	}
 	public String getTarget() {
 		return target;

@@ -2,8 +2,14 @@ package edu.hit.GithubDataModel;
 
 import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
+import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Configuration;
 
+/**
+ * 辅助类，单例模式的SessionFactory
+ * @author DHAO
+ *
+ */
 public class HibernateUtil {
 
 	private static final SessionFactory sessionFactory = buildFactory();	
@@ -11,7 +17,7 @@ public class HibernateUtil {
 	private static SessionFactory buildFactory(){
 		
 		try {
-			return new Configuration().configure().buildSessionFactory();
+			return new AnnotationConfiguration().configure().buildSessionFactory();
 		} catch (HibernateException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -22,6 +28,11 @@ public class HibernateUtil {
 	
 	public static SessionFactory getSessionFactory(){
 		return sessionFactory;
+	}
+	
+	public static void closeSessionFactory(){
+		sessionFactory.close();
+		
 	}
 
 }

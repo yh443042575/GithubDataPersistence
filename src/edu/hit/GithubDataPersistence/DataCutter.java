@@ -18,7 +18,7 @@ import com.oracle.nio.BufferSecrets;
 /**
  * 分割githubArchive中下载来的大数据 1、能够将大数据切割成小块 2、分析每一个小块中的数据，识别出所有我们所需要的行为的json
  * 
- * @author ASUS
+ * @author DHAO
  *
  */
 public class DataCutter {
@@ -43,12 +43,22 @@ public class DataCutter {
 	/* 用于存放截取文件的片段 */
 	private byte[] dst = new byte[BUFFER_SIZE];
 
-	public DataCutter(String filePath) throws IOException {
+	public DataCutter(String filePath)  {
 		this.filePath = filePath;
 		file = new File(filePath);
 		fileLength = file.length();
-		FileChannel fc = new RandomAccessFile(file, "rw").getChannel();
-		in = fc.map(FileChannel.MapMode.READ_ONLY, 0, fileLength);
+		FileChannel fc;
+		try {
+			fc = new RandomAccessFile(file, "rw").getChannel();
+			in = fc.map(FileChannel.MapMode.READ_ONLY, 0, fileLength);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 
 	/* 根据偏移量去切割数据,同时修改offset */
@@ -120,7 +130,6 @@ public class DataCutter {
 				}
 				resultList.add(partition.substring(upFlag, downFlag + 1));
 				scannedFlag = downFlag;
-				System.out.println("成功匹配");
 			}
 		}
 
