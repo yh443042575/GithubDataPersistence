@@ -1,26 +1,34 @@
 package edu.hit.GithubDataModel;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+
 
 /**
  * 对某次commit代码进行的评论
  * @author DHAO
  *
  */
+@Entity
 public class CommitCommentEvent {
 
-	private String id;
+	private long id;
+	private String commentId = "";
 	private String actor;
 	private String repo;
-	private String html_url;
-	private String commit_id;
-	private String created_at;
-	private String body;
+	private String htmlUrl;
+	private String commitId = "";
+	private String createdAt;
+	private String body = "";
 	private String target;
 	
-	public String getId() {
+	@Id
+	@GeneratedValue
+	public long getId() {
 		return id;
 	}
-	public void setId(String id) {
+	public void setId(long id) {
 		this.id = id;
 	}
 	public String getActor() {
@@ -35,23 +43,23 @@ public class CommitCommentEvent {
 	public void setRepo(String repo) {
 		this.repo = repo;
 	}
-	public String getHtml_url() {
-		return html_url;
+	public String getHtmlUrl() {
+		return htmlUrl;
 	}
-	public void setHtml_url(String html_url) {
-		this.html_url = html_url;
+	public void setHtmlUrl(String htmlUrl) {
+		this.htmlUrl = htmlUrl;
 	}
-	public String getCommit_id() {
-		return commit_id;
+	public String getCommitId() {
+		return commitId;
 	}
-	public void setCommit_id(String commit_id) {
-		this.commit_id = commit_id;
+	public void setCommitId(String commitId) {
+		this.commitId = commitId;
 	}
-	public String getCreated_at() {
-		return created_at;
+	public String getCreatedAt() {
+		return createdAt;
 	}
-	public void setCreated_at(String created_at) {
-		this.created_at = created_at;
+	public void setCreatedAt(String createdAt) {
+		this.createdAt = createdAt;
 	}
 	public String getBody() {
 		return body;
@@ -65,6 +73,14 @@ public class CommitCommentEvent {
 	public void setTarget(String target) {
 		this.target = target;
 	}
+	public String getCommentId() {
+		return commentId;
+	}
+	public void setCommentId(String commentId) {
+		this.commentId = commentId;
+	}
+	
+	
 	
 	
 }

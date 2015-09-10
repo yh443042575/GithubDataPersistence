@@ -1,96 +1,152 @@
 package edu.hit.githubDataAnalyzer;
 
+import java.io.File;
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.hibernate.Session;
+
+import edu.hit.GithubDataModel.HibernateUtil;
 import edu.hit.GithubDataPersistence.DataCutter;
 
 /**
- * 解压文件，找到我们想要的相关项目的数据，
- * 并调用持久化函数将相对应的event持久化到数据库中
+ * 解压文件，找到我们想要的相关项目的数据， 并调用持久化函数将相对应的event持久化到数据库中
+ * 
  * @author DHAO
  *
  */
 public class MainAnalyzer {
 
-	private ExecutorService exec = Executors.newFixedThreadPool(10);
-	
-	
-	
+	public void startAnalyze() throws InterruptedException {
+		CountDownLatch countDownLatch= new CountDownLatch(2);
+		ExecutorService exec = Executors.newFixedThreadPool(2);
+		Session session1 = HibernateUtil.getSessionFactory()
+				.openSession();
+		Session session2 = HibernateUtil.getSessionFactory()
+				.openSession();
+		UnzipAndDispatcher unzipAndDispatcher1 = new UnzipAndDispatcher(
+				"G://githubRawData", "2013-01-05-0", "2013-01-10-0",countDownLatch,session1);
+		UnzipAndDispatcher unzipAndDispatcher2 = new UnzipAndDispatcher(
+				"G://githubRawData", "2013-01-01-0", "2013-01-05-0",countDownLatch,session2);
+		long time = System.currentTimeMillis();
+		exec.execute(unzipAndDispatcher1);
+		exec.execute(unzipAndDispatcher2);		
+		countDownLatch.await();
+		HibernateUtil.closeSessionFactory();
+		exec.shutdown();
+		System.out.println("存储用时： "+(System.currentTimeMillis()-time));
+		// unzipAndDispatcher.run();
+		
+	}
+
 }
+
 /**
  * 负责解压文件，并且抽取我们想要的json，调度给相对的eventAnalyzer去解析
+ * 
  * @author DHAO
  *
  */
-class UnzipAndDispatcher implements Runnable{
-	/*文件路径*/
+class UnzipAndDispatcher implements Runnable {
+	/* 文件路径 */
 	private String filePath;
-	/*扫描初始日期*/
+	/* 扫描初始日期 */
 	private String startDate;
-	/*扫描结束日期*/
+	/* 扫描结束日期 */
 	private String stopDate;
+	
+	private CountDownLatch countDownLatch;
 
-	public UnzipAndDispatcher(String filePath,String startDate, String stopDate) {
+	private Session session;
+	
+	public UnzipAndDispatcher(String filePath, String startDate, String stopDate,CountDownLatch countDownLatch,Session session) {
 		this.startDate = startDate;
 		this.stopDate = stopDate;
 		this.filePath = filePath;
+		this.countDownLatch = countDownLatch;
+		this.session = session;
 	}
 
-	
 	private EventAnalyzer eventAnalyzer = new EventAnalyzer();
-	
+
 	private boolean flag = true;
-	
+
 	@Override
 	public void run() {
+
 		Calendar calendar = Calendar.getInstance();
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-HH");
-		/*将calendar设置为扫描截止时间*/
+		/* 将calendar设置为扫描截止时间 */
 		try {
 			calendar.setTime(sdf.parse(stopDate));
 		} catch (ParseException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-		/*保留截止时间，用于while循环比较*/
+		/* 保留截止时间，用于while循环比较 */
 		long stopDateMillis = calendar.getTimeInMillis();
-		/*将calendar设置为扫描开始时间*/
+		/* 将calendar设置为扫描开始时间 */
 		try {
 			calendar.setTime(sdf.parse(startDate));
 		} catch (ParseException e) {
 			System.out.println("日期转换问题...");
 			e.printStackTrace();
 		}
-		/*根据文件路径*/
-		while(flag){
+		/* 根据文件路径 */
+		
+		while (flag) {
 			String file = sdf.format(calendar.getTime());
-			/*解压文件*/
-			UnzipTool.doUncompressFile(file+".json.gz");
-			/*对解压后的文件进行映射*/
-			DataCutter dataCutter = new DataCutter(filePath+"/"+file);
-			/*切割原始数据，获得跟项目有关的json*/
-			List<String> jsonData = dataCutter.extractJsonData("jquery/jquery");
-			/*循环解析json，将json数据进行持久化*/
-			for(String json:jsonData){
-				eventAnalyzer.analyzeJson(json);
+			if (file.charAt(file.length() - 2) == '0') {
+				file = file.substring(0, file.length() - 2)
+						+ file.charAt(file.length() - 1);
 			}
-			
-			if(calendar.getTimeInMillis()<stopDateMillis){
-				/*如果没到指定日期，则继续分析下一个小时的数据*/
-				calendar.setTimeInMillis(calendar.getTimeInMillis()+3600*1000);
-			}else {
+			file = filePath + "/" + file;
+			/* 解压文件 */
+			UnzipTool.doUncompressFile(file + ".json.gz");
+			/* 对解压后的文件进行映射 */
+			DataCutter dataCutter = new DataCutter(file + ".json");
+			/* 切割原始数据，获得跟项目有关的json */
+			List<String> jsonData;
+			try {
+				
+				jsonData = dataCutter.extractJsonData("\"name\":\"jquery/jquery\"|\"name\":\"jquery\"");
+
+				/* 循环解析json，将json数据进行持久化 */
+				synchronized (session) {
+					session.beginTransaction();
+					for (String json : jsonData) {
+						eventAnalyzer.analyzeJson(json,session);
+						try {
+							Thread.sleep(200);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+					}
+					session.getTransaction().commit();
+				}
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+			if (calendar.getTimeInMillis() < stopDateMillis) {
+				/* 如果没到指定日期，则继续分析下一个小时的数据 */
+				calendar.setTimeInMillis(calendar.getTimeInMillis() + 3600 * 1000);
+			} else {
 				flag = false;
 			}
+			System.out.println(file+"解析完成");
+			File file2 = new File(file+".json");
+			file2.delete();
 		}
 		this.setFlag(false);
+		System.out.println(" end of the "+Thread.currentThread().getName());
+		countDownLatch.countDown();
 	}
-
-	
 
 	public String getStartDate() {
 		return startDate;
@@ -108,10 +164,8 @@ class UnzipAndDispatcher implements Runnable{
 		this.stopDate = stopDate;
 	}
 
-
 	public void setFlag(boolean flag) {
 		this.flag = flag;
 	}
-	
-	
+
 }

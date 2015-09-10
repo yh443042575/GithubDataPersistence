@@ -1,10 +1,16 @@
 package edu.hit.GithubDataModel;
 
-public class issueCommentEvent {
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+
+@Entity
+public class IssueCommentEvent {
 	
-	private String id;
+	private long id;
 	private String actor;
 	private String repo;
+	private String htmlUrl;
 	private String issueId;
 	private String issueUser;
 	private String issueLabels;
@@ -17,10 +23,12 @@ public class issueCommentEvent {
 	private String createdAt;
 	private String target;
 	
-	public String getId() {
+	@Id
+	@GeneratedValue
+	public long getId() {
 		return id;
 	}
-	public void setId(String id) {
+	public void setId(long id) {
 		this.id = id;
 	}
 	public String getActor() {
@@ -101,6 +109,13 @@ public class issueCommentEvent {
 	public void setTarget(String target) {
 		this.target = target;
 	}
+	public String getHtmlUrl() {
+		return htmlUrl;
+	}
+	public void setHtmlUrl(String htmlUrl) {
+		this.htmlUrl = htmlUrl;
+	}
+	
 	
 	
 	

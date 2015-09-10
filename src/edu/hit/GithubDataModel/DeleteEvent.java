@@ -1,13 +1,18 @@
 package edu.hit.GithubDataModel;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+
 /**
  * 删除事件
  * @author DHAO
  *
  */
+@Entity
 public class DeleteEvent {
 	
-	private String id;
+	private long id;
 	private String actor;
 	private String repo;
 	/**
@@ -20,10 +25,12 @@ public class DeleteEvent {
 	private String ref;
 	private String target;
 	
-	public String getId() {
+	@Id
+	@GeneratedValue
+	public long getId() {
 		return id;
 	}
-	public void setId(String id) {
+	public void setId(long id) {
 		this.id = id;
 	}
 	public String getActor() {

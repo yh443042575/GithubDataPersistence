@@ -100,11 +100,6 @@ public class UnzipTool {
         return fname;   
 	
     }
-    
-    public static void main(String[] args){
-    	UnzipTool unzipTool = new UnzipTool();
-    	unzipTool.doUncompressFile("G://githubRawData/2012-01-01-0.json.gz");
-    }
 	
 	
 

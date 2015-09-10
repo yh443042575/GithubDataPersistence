@@ -33,23 +33,25 @@ public class DataCutter {
 	private String filePath;
 	private long fileLength;
 	private int offset = 0;
+	private boolean fileScannedFinishFlag = false;
 	/**
 	 * 切割点的byte数组，用ASCII码翻译来是：}\回车\换行{
 	 */
 	byte[] cutPoint = { 125, 13, 10, 123 };
 	private File file;
-	private FileChannel fileChannel;
+	private RandomAccessFile randomAccessFile;
+	private FileChannel fc;
 	private MappedByteBuffer in;
 	/* 用于存放截取文件的片段 */
-	private byte[] dst = new byte[BUFFER_SIZE];
+	private byte[] dst;
 
-	public DataCutter(String filePath)  {
+	public DataCutter(String filePath) {
 		this.filePath = filePath;
 		file = new File(filePath);
 		fileLength = file.length();
-		FileChannel fc;
 		try {
-			fc = new RandomAccessFile(file, "rw").getChannel();
+			randomAccessFile = new RandomAccessFile(file, "rw");
+			fc = randomAccessFile.getChannel();
 			in = fc.map(FileChannel.MapMode.READ_ONLY, 0, fileLength);
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -58,17 +60,22 @@ public class DataCutter {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 	}
 
 	/* 根据偏移量去切割数据,同时修改offset */
-	private byte[] cut() {
+	private byte[] cut() throws IOException {
+		dst = new byte[BUFFER_SIZE];
 		if (fileLength - offset >= BUFFER_SIZE) {
 			for (int i = 0; i < BUFFER_SIZE; i++)
 				dst[i] = in.get(offset + i);
+
 		} else {
 			for (int i = 0; i < fileLength - offset; i++)
 				dst[i] = in.get(offset + i);
+			fc.close();
+			randomAccessFile.close();
+			fileScannedFinishFlag = true;
 		}
 		offset += BUFFER_SIZE;
 
@@ -91,7 +98,7 @@ public class DataCutter {
 	/*
 	 * 接收得到的byte数组，过滤出我们想要的相关的项目的json
 	 */
-	public List<String> extractJsonData(String program) {
+	public List<String> extractJsonData(String program) throws IOException {
 
 		List<String> resultList = new ArrayList<String>();
 
@@ -99,37 +106,50 @@ public class DataCutter {
 		int downFlag;
 		int scannedFlag = 0;// 保存扫描过的位置的尾部，每一次找到新的json之后都更新一次
 
-		String partition = new String(this.cut());
-
 		Pattern pattern = Pattern.compile(program);// "https://github\\.com/"+
-		Matcher matcher = pattern.matcher(partition);
 
-		while (matcher.find()) {
-			
-			upFlag = matcher.start();
-			downFlag = matcher.end();
-			if (upFlag > scannedFlag) {
-				System.out.println(matcher.group());
-				System.out.println(matcher.start() + " " + matcher.end());
-				while (true) {
-					if ((dst[upFlag - 3] == 125) && (dst[upFlag - 2] == 13)
-							&& (dst[upFlag - 1] == 10) && (dst[upFlag] == 123)) {
-						break;
-					} else {
-						upFlag--;
+		while (!fileScannedFinishFlag) {
+			String partition = new String(this.cut());
+
+			Matcher matcher = pattern.matcher(partition);
+
+			while (matcher.find()) {
+
+				upFlag = matcher.start();
+				downFlag = matcher.end();
+				if (upFlag > scannedFlag) {
+					while (upFlag >= 2) {
+						if (((int) partition.charAt(upFlag - 2) == 125)
+								&& ((int) partition.charAt(upFlag - 1) == 10)
+								&& ((int) partition.charAt(upFlag) == 123)) {
+							break;
+						} else {
+							upFlag--;
+						}
 					}
-				}
-				while (true) {
-					if ((dst[downFlag + 3] == 123) && (dst[downFlag + 2] == 10)
-							&& (dst[downFlag + 1] == 13)
-							&& (dst[downFlag] == 125)) {
-						break;
-					} else {
-						downFlag++;
+					while ((downFlag < (partition.length() - 1))) {
+
+						try {
+							if (((int) partition.charAt(downFlag + 1) == 10)
+									&& ((int) partition.charAt(downFlag) == 125)) {
+								break;
+							} else {
+								downFlag++;
+							}
+						} catch (Exception e) {
+							System.out.println(partition.length());
+							System.out.println(downFlag);
+						}
+
 					}
+					if (upFlag >= 0&&downFlag < (partition.length() - 1)) {
+						String string = partition.substring(upFlag,
+								downFlag + 1);
+						// System.out.println(string);
+						resultList.add(string);
+					}
+					scannedFlag = downFlag;
 				}
-				resultList.add(partition.substring(upFlag, downFlag + 1));
-				scannedFlag = downFlag;
 			}
 		}
 

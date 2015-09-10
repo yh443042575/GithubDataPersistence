@@ -1,12 +1,13 @@
 package edu.hit.GithubDataModel;
 
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
-
+@Entity
 public class CreateEvent {
 
-	private String id;
+	private long id;
 	private String actor;
 	private String repo;
 	/*
@@ -21,15 +22,19 @@ public class CreateEvent {
 	private String createdAt;
 	private String target;
 	
-	public String getId() {
+	@Id
+	@GeneratedValue
+	public long getId() {
 		return id;
 	}
-	public void setId(String id) {
+	public void setId(long id) {
 		this.id = id;
 	}
+	
 	public String getActor() {
 		return actor;
 	}
+	
 	public void setActor(String actor) {
 		this.actor = actor;
 	}

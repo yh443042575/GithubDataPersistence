@@ -1,17 +1,24 @@
 package edu.hit.GithubDataModel;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+
 /**
  * commit代码的操作
  * @author DHAO
  *
  */
+@Entity
 public class PushEvent {
 	
-	private String id;
+	private long id;
 	private String actor;
 	private String repo;
 	
 	private String pushId;
+	
 	private String before;
 	/**
 	 * The SHA of the HEAD commit on the repository.
@@ -24,14 +31,17 @@ public class PushEvent {
 	/**
 	 * 本次commit时所附带的message
 	 */
-	private String commitMessage;
+	private String commitSha;
+	private String commitMessage = "";
 	
 	private String createdAt;
 	private String target;
-	public String getId() {
+	@Id
+	@GeneratedValue
+	public long getId() {
 		return id;
 	}
-	public void setId(String id) {
+	public void setId(long id) {
 		this.id = id;
 	}
 	public String getActor() {
@@ -52,6 +62,7 @@ public class PushEvent {
 	public void setPushId(String pushId) {
 		this.pushId = pushId;
 	}
+	@Column(name="`before`")
 	public String getBefore() {
 		return before;
 	}
@@ -87,6 +98,12 @@ public class PushEvent {
 	}
 	public void setTarget(String target) {
 		this.target = target;
+	}
+	public String getCommitSha() {
+		return commitSha;
+	}
+	public void setCommitSha(String commitSha) {
+		this.commitSha = commitSha;
 	}
 	
 	

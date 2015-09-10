@@ -1,8 +1,13 @@
 package edu.hit.GithubDataModel;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+
+@Entity
 public class ForkEvent {
 
-	private String id;
+	private long id;
 	private String actor;
 	/**
 	 * fork人家的代码的repository
@@ -16,12 +21,14 @@ public class ForkEvent {
 	private String forkeeOwner;
 	private String forkeeDescription;
 	
-	private String created_at;
+	private String createdAt;
 	private String target;
-	public String getId() {
+	@Id
+	@GeneratedValue
+	public long getId() {
 		return id;
 	}
-	public void setId(String id) {
+	public void setId(long id) {
 		this.id = id;
 	}
 	public String getActor() {
@@ -54,11 +61,12 @@ public class ForkEvent {
 	public void setForkeeDescription(String forkeeDescription) {
 		this.forkeeDescription = forkeeDescription;
 	}
-	public String getCreated_at() {
-		return created_at;
+	
+	public String getCreatedAt() {
+		return createdAt;
 	}
-	public void setCreated_at(String created_at) {
-		this.created_at = created_at;
+	public void setCreatedAt(String createdAt) {
+		this.createdAt = createdAt;
 	}
 	public String getTarget() {
 		return target;
