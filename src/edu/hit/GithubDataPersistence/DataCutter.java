@@ -4,8 +4,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.lang.reflect.Method;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -16,7 +19,9 @@ import org.omg.CORBA.PUBLIC_MEMBER;
 import com.oracle.nio.BufferSecrets;
 
 /**
- * 分割githubArchive中下载来的大数据 1、能够将大数据切割成小块 2、分析每一个小块中的数据，识别出所有我们所需要的行为的json
+ * 分割githubArchive中下载来的大数据
+ * 1、能够将大数据切割成小块
+ * 2、分析每一个小块中的数据，识别出所有我们所需要的行为的json
  * 
  * @author DHAO
  *
@@ -30,7 +35,6 @@ public class DataCutter {
 	 * 截取的项目名称 private String program;
 	 */
 	/* 原始大文件的地址 */
-	private String filePath;
 	private long fileLength;
 	private int offset = 0;
 	private boolean fileScannedFinishFlag = false;
@@ -38,19 +42,17 @@ public class DataCutter {
 	 * 切割点的byte数组，用ASCII码翻译来是：}\回车\换行{
 	 */
 	byte[] cutPoint = { 125, 13, 10, 123 };
-	private File file;
 	private RandomAccessFile randomAccessFile;
 	private FileChannel fc;
 	private MappedByteBuffer in;
 	/* 用于存放截取文件的片段 */
 	private byte[] dst;
 
-	public DataCutter(String filePath) {
-		this.filePath = filePath;
-		file = new File(filePath);
+	public DataCutter(File file) {
+
 		fileLength = file.length();
 		try {
-			randomAccessFile = new RandomAccessFile(file, "rw");
+			randomAccessFile = new RandomAccessFile(file, "r");
 			fc = randomAccessFile.getChannel();
 			in = fc.map(FileChannel.MapMode.READ_ONLY, 0, fileLength);
 		} catch (FileNotFoundException e) {
@@ -98,6 +100,7 @@ public class DataCutter {
 	/*
 	 * 接收得到的byte数组，过滤出我们想要的相关的项目的json
 	 */
+	@SuppressWarnings("static-access")
 	public List<String> extractJsonData(String program) throws IOException {
 
 		List<String> resultList = new ArrayList<String>();
@@ -142,7 +145,7 @@ public class DataCutter {
 						}
 
 					}
-					if (upFlag >= 0&&downFlag < (partition.length() - 1)) {
+					if (upFlag >= 0 && downFlag < (partition.length() - 1)) {
 						String string = partition.substring(upFlag,
 								downFlag + 1);
 						// System.out.println(string);
@@ -152,8 +155,42 @@ public class DataCutter {
 				}
 			}
 		}
+		try {
+			this.clean(in);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		randomAccessFile.close();
+		System.out.println("fc：" + fc.isOpen());
 
 		return resultList;
+	}
+
+	/**
+	 * 解除MappedByteBuffer对文件的映射，如果不解除，则文件会一直被映射持有引用，导致删除不掉，从而磁盘会爆掉
+	 * 
+	 * @param buffer
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unchecked")
+	public static void clean(final Object buffer) throws Exception {
+		AccessController.doPrivileged(new PrivilegedAction() {
+			public Object run() {
+				try {
+					Method getCleanerMethod = buffer.getClass().getMethod(
+							"cleaner", new Class[0]);
+					getCleanerMethod.setAccessible(true);
+					sun.misc.Cleaner cleaner = (sun.misc.Cleaner) getCleanerMethod
+							.invoke(buffer, new Object[0]);
+					cleaner.clean();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				return null;
+			}
+		});
+
 	}
 
 }

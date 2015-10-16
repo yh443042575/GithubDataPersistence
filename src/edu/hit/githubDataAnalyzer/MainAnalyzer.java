@@ -75,6 +75,7 @@ class UnzipAndDispatcher implements Runnable {
 
 	private EventAnalyzer eventAnalyzer = new EventAnalyzer();
 
+	/*某一个压缩包的文件还未分析完则为true，分析完了则设置为false*/
 	private boolean flag = true;
 
 	@Override
@@ -110,7 +111,8 @@ class UnzipAndDispatcher implements Runnable {
 			/* 解压文件 */
 			UnzipTool.doUncompressFile(file + ".json.gz");
 			/* 对解压后的文件进行映射 */
-			DataCutter dataCutter = new DataCutter(file + ".json");
+			File file2 = new File(file+".json");
+			DataCutter dataCutter = new DataCutter(file2);
 			/* 切割原始数据，获得跟项目有关的json */
 			List<String> jsonData;
 			try {
@@ -140,8 +142,18 @@ class UnzipAndDispatcher implements Runnable {
 				flag = false;
 			}
 			System.out.println(file+"解析完成");
-			File file2 = new File(file+".json");
-			file2.delete();
+			if(file2.exists()){
+				System.out.println("文件存在，准备删除");
+				try {
+					java.nio.file.Files.delete(file2.toPath());
+					System.out.println("删除成功");
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}else {
+				System.out.println("很奇怪，文件不存在");
+			}
 		}
 		this.setFlag(false);
 		System.out.println(" end of the "+Thread.currentThread().getName());

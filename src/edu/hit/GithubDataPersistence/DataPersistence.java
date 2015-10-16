@@ -26,18 +26,24 @@ import edu.hit.githubDataAnalyzer.HtmlAnalyzer;
 /**
  * 负责相关类的持久化操作,首先根据Type构造对应的对象， 然后通过persistenceObject将对象持久化到数据库中
  * 
+ * 构造对象基本包括，行为的发起者actor,行为的内容content,行为所指向的目标target(需要后期推断),行为所在的repository
+ * 
  * Message,assginee,ref都可能等于null
  * 
  * @author 程序员天猫浩
  *
  */
 public class DataPersistence {
+	
 
 	public Object constructCommitCommentEvent(JsonObject root) {
 		HtmlAnalyzer htmlAnalyzer = null;
 		String htmlResult = "";
 		CommitCommentEvent commitCommentEvent = new CommitCommentEvent();
 		
+		/*
+		 * 得到CommitCommentEvent的payload，payload中包含comment,commit_id一类的信息
+		 */
 		JsonObject payload = root.getAsJsonObject("payload");
 		if(payload.has("comment")){
 			JsonObject comment = payload.getAsJsonObject("comment");
@@ -77,8 +83,7 @@ public class DataPersistence {
 				System.out.println("联网解析成功！");
 			}else {
 				System.out.println("404错误，解析失败...");
-			}
-			
+			}			
 		}
 		if(commitCommentEvent.getCommitId().equals("")){
 			if(!htmlAnalyzer.equals(null)){
@@ -88,8 +93,7 @@ public class DataPersistence {
 			htmlResult = htmlAnalyzer.getCommitCommentEventCommitIdByUrl(commitCommentEvent.getHtmlUrl());
 
 			commitCommentEvent.setCommitId(htmlResult);
-		}
-		
+		}		
 		return commitCommentEvent;
 
 	}
@@ -181,12 +185,15 @@ public class DataPersistence {
 	}
 
 	public Object constructIssueCommentEvent(JsonObject root) {
+		HtmlAnalyzer htmlAnalyzer = null;
+		String htmlResult = "";
 		IssueCommentEvent issueCommentEvent = new IssueCommentEvent();
 		JsonObject payload = root.get("payload").getAsJsonObject();
 
 		if (payload.has("comment")) {
 			JsonObject comment = payload.get("comment").getAsJsonObject();
 			issueCommentEvent.setCommentBody(comment.get("body").getAsString());
+			
 			issueCommentEvent.setCommentCreatedAt(comment.get("created_at")
 					.getAsString());
 			issueCommentEvent.setCommentId(comment.get("id").getAsString());
@@ -229,6 +236,21 @@ public class DataPersistence {
 		}
 
 		issueCommentEvent.setCreatedAt(root.get("created_at").getAsString());
+		
+		if(issueCommentEvent.getCommentBody()==null||issueCommentEvent.getCommentBody().equals("")){
+			System.out.println("issueCommentEvent联网解析中...");
+			htmlAnalyzer = new HtmlAnalyzer();
+			htmlResult = htmlAnalyzer.getIssueCommentEventBodyByUrlAndCommentId(issueCommentEvent.getHtmlUrl(), issueCommentEvent.getCommentId());
+			issueCommentEvent.setCommentBody(htmlResult);
+			if(!htmlResult.equals("404 not found Exception")){
+				System.out.println("联网解析成功！");
+			}else {
+				System.out.println("404错误，解析失败...");
+			}			
+		}else {
+			System.out.println("issueCommentEvent不为空，内容为："+issueCommentEvent.getCommentBody());
+			
+		}
 
 		return issueCommentEvent;
 

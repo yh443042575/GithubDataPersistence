@@ -19,7 +19,7 @@ import java.util.Calendar;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
 
-import sun.net.www.content.audio.x_aiff;
+
 
 /**
  * 负责
