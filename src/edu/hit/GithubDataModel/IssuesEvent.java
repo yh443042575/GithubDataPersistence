@@ -16,6 +16,8 @@ public class IssuesEvent {
 	private String issueAssingee;
 	private String issueCreatedAt;
 	private String createdAt;
+	private String artifactId;
+	
 	@Id
 	@GeneratedValue
 	public long getId() {
@@ -77,6 +79,12 @@ public class IssuesEvent {
 	}
 	public void setCreatedAt(String createdAt) {
 		this.createdAt = createdAt;
+	}
+	public String getArtifactId() {
+		return artifactId;
+	}
+	public void setArtifactId(String artifactId) {
+		this.artifactId = artifactId;
 	}
 	
 	

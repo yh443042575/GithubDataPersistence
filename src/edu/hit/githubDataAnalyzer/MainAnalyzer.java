@@ -31,9 +31,9 @@ public class MainAnalyzer {
 		Session session2 = HibernateUtil.getSessionFactory()
 				.openSession();
 		UnzipAndDispatcher unzipAndDispatcher1 = new UnzipAndDispatcher(
-				"G://githubRawData", "2013-01-05-0", "2013-01-10-0",countDownLatch,session1);
+				"G://githubRawData", "2013-02-20-0", "2013-02-29-0",countDownLatch,session1);
 		UnzipAndDispatcher unzipAndDispatcher2 = new UnzipAndDispatcher(
-				"G://githubRawData", "2013-01-01-0", "2013-01-05-0",countDownLatch,session2);
+				"G://githubRawData", "2013-01-01-0", "2013-01-31-0",countDownLatch,session2);
 		long time = System.currentTimeMillis();
 		exec.execute(unzipAndDispatcher1);
 		exec.execute(unzipAndDispatcher2);		

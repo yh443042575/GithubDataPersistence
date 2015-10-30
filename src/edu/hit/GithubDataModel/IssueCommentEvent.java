@@ -22,6 +22,7 @@ public class IssueCommentEvent {
 	private String commentCreatedAt;
 	private String createdAt;
 	private String target;
+	private String artifactId;
 	
 	@Id
 	@GeneratedValue
@@ -114,6 +115,12 @@ public class IssueCommentEvent {
 	}
 	public void setHtmlUrl(String htmlUrl) {
 		this.htmlUrl = htmlUrl;
+	}
+	public String getArtifactId() {
+		return artifactId;
+	}
+	public void setArtifactId(String artifactId) {
+		this.artifactId = artifactId;
 	}
 	
 	

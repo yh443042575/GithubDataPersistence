@@ -22,6 +22,7 @@ public class CommitCommentEvent {
 	private String createdAt;
 	private String body = "";
 	private String target;
+	private String artifactId;
 	
 	@Id
 	@GeneratedValue
@@ -78,6 +79,12 @@ public class CommitCommentEvent {
 	}
 	public void setCommentId(String commentId) {
 		this.commentId = commentId;
+	}
+	public String getArtifactId() {
+		return artifactId;
+	}
+	public void setArtifactId(String artifactId) {
+		this.artifactId = artifactId;
 	}
 	
 	

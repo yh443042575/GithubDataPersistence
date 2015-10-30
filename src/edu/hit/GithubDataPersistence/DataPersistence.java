@@ -1,5 +1,9 @@
 package edu.hit.GithubDataPersistence;
 
+import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import javassist.expr.Instanceof;
 
 import org.hibernate.Session;
@@ -7,6 +11,7 @@ import org.hibernate.Session;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import edu.hit.GithubDataModel.CommitCommentEvent;
 import edu.hit.GithubDataModel.CreateEvent;
@@ -34,28 +39,31 @@ import edu.hit.githubDataAnalyzer.HtmlAnalyzer;
  *
  */
 public class DataPersistence {
-	
 
 	public Object constructCommitCommentEvent(JsonObject root) {
 		HtmlAnalyzer htmlAnalyzer = null;
 		String htmlResult = "";
 		CommitCommentEvent commitCommentEvent = new CommitCommentEvent();
-		
+
 		/*
 		 * 得到CommitCommentEvent的payload，payload中包含comment,commit_id一类的信息
 		 */
 		JsonObject payload = root.getAsJsonObject("payload");
-		if(payload.has("comment")){
+		if (payload.has("comment")) {
 			JsonObject comment = payload.getAsJsonObject("comment");
 			commitCommentEvent.setCommentId(comment.get("id").getAsString());
-			commitCommentEvent.setCommitId(comment.get("commit_id").getAsString());
+			commitCommentEvent.setCommitId(comment.get("commit_id")
+					.getAsString());
 			commitCommentEvent.setBody(comment.get("body").getAsString());
-			commitCommentEvent.setHtmlUrl(comment.get("html_url").getAsString());
-		}else {
-			if(payload.has("comment_id"))
-			commitCommentEvent.setCommentId(payload.get("comment_id").getAsString());
-			if(payload.has("commit_id"))
-			commitCommentEvent.setCommitId(payload.get("commit_id").getAsString());
+			commitCommentEvent
+					.setHtmlUrl(comment.get("html_url").getAsString());
+		} else {
+			if (payload.has("comment_id"))
+				commitCommentEvent.setCommentId(payload.get("comment_id")
+						.getAsString());
+			if (payload.has("commit_id"))
+				commitCommentEvent.setCommitId(payload.get("commit_id")
+						.getAsString());
 		}
 		if (root.has("repo")) {
 			commitCommentEvent.setRepo(root.get("repo").getAsJsonObject()
@@ -70,30 +78,42 @@ public class DataPersistence {
 		} else {
 			commitCommentEvent.setActor(root.get("actor").getAsString());
 		}
-		if(root.has("url")){
+		if (root.has("url")) {
 			commitCommentEvent.setHtmlUrl(root.get("url").getAsString());
 		}
 		commitCommentEvent.setCreatedAt(root.get("created_at").getAsString());
-		if(commitCommentEvent.getBody().equals("")){
+		if (commitCommentEvent.getBody().equals("")) {
 			System.out.println("commitComment联网解析中...");
 			htmlAnalyzer = new HtmlAnalyzer();
-			htmlResult = htmlAnalyzer.getCommitCommentEventBodyByUrlAndCommentId(commitCommentEvent.getHtmlUrl(), commitCommentEvent.getCommentId());
+			htmlResult = htmlAnalyzer
+					.getCommitCommentEventBodyByUrlAndCommentId(
+							commitCommentEvent.getHtmlUrl(),
+							commitCommentEvent.getCommentId());
 			commitCommentEvent.setBody(htmlResult);
-			if(!htmlResult.equals("404 not found Exception")){
+			if (!htmlResult.equals("404 not found Exception")) {
 				System.out.println("联网解析成功！");
-			}else {
+			} else {
 				System.out.println("404错误，解析失败...");
-			}			
+			}
 		}
-		if(commitCommentEvent.getCommitId().equals("")){
-			if(!htmlAnalyzer.equals(null)){
+		if (commitCommentEvent.getCommitId().equals("")) {
+			if (!htmlAnalyzer.equals(null)) {
 				htmlAnalyzer = new HtmlAnalyzer();
 			}
-			if(!htmlResult.equals("404 not found Exception"))
-			htmlResult = htmlAnalyzer.getCommitCommentEventCommitIdByUrl(commitCommentEvent.getHtmlUrl());
+			if (!htmlResult.equals("404 not found Exception"))
+				htmlResult = htmlAnalyzer
+						.getCommitCommentEventCommitIdByUrl(commitCommentEvent
+								.getHtmlUrl());
 
 			commitCommentEvent.setCommitId(htmlResult);
-		}		
+		}
+		
+		Pattern artifactPattern = Pattern.compile("[a-zA-Z]+/[a-zA-Z]+/commit/[a-z[0-9]]+");
+		Matcher matcher = artifactPattern.matcher(commitCommentEvent.getHtmlUrl());
+		if(matcher.find()){
+			commitCommentEvent.setArtifactId(matcher.group());
+		}
+		
 		return commitCommentEvent;
 
 	}
@@ -193,7 +213,7 @@ public class DataPersistence {
 		if (payload.has("comment")) {
 			JsonObject comment = payload.get("comment").getAsJsonObject();
 			issueCommentEvent.setCommentBody(comment.get("body").getAsString());
-			
+
 			issueCommentEvent.setCommentCreatedAt(comment.get("created_at")
 					.getAsString());
 			issueCommentEvent.setCommentId(comment.get("id").getAsString());
@@ -236,28 +256,40 @@ public class DataPersistence {
 		}
 
 		issueCommentEvent.setCreatedAt(root.get("created_at").getAsString());
-		
-		if(issueCommentEvent.getCommentBody()==null||issueCommentEvent.getCommentBody().equals("")){
+
+		if (issueCommentEvent.getCommentBody() == null
+				|| issueCommentEvent.getCommentBody().equals("")) {
 			System.out.println("issueCommentEvent联网解析中...");
 			htmlAnalyzer = new HtmlAnalyzer();
-			htmlResult = htmlAnalyzer.getIssueCommentEventBodyByUrlAndCommentId(issueCommentEvent.getHtmlUrl(), issueCommentEvent.getCommentId());
+			htmlResult = htmlAnalyzer
+					.getIssueCommentEventBodyByUrlAndCommentId(
+							issueCommentEvent.getHtmlUrl(),
+							issueCommentEvent.getCommentId());
 			issueCommentEvent.setCommentBody(htmlResult);
-			if(!htmlResult.equals("404 not found Exception")){
+			if (!htmlResult.equals("404 not found Exception")) {
 				System.out.println("联网解析成功！");
-			}else {
+			} else {
 				System.out.println("404错误，解析失败...");
-			}			
-		}else {
-			System.out.println("issueCommentEvent不为空，内容为："+issueCommentEvent.getCommentBody());
-			
+			}
+		} else {
+			System.out.println("issueCommentEvent不为空，内容为："
+					+ issueCommentEvent.getCommentBody());
+
 		}
 
+		Pattern artifactPattern = Pattern.compile("[a-zA-Z]+/[a-zA-Z]+/issues/[a-z[0-9]]+");
+		Matcher matcher = artifactPattern.matcher(issueCommentEvent.getHtmlUrl());
+		if(matcher.find()){
+			issueCommentEvent.setArtifactId(matcher.group());
+		}
+		
 		return issueCommentEvent;
 
 	}
 
 	public Object constructIssuesEvent(JsonObject root) {
 		IssuesEvent issuesEvent = new IssuesEvent();
+		System.out.println("2013issuesEvent示例："+root.toString());
 		if (root.has("repo")) {
 			issuesEvent.setRepo(root.get("repo").getAsJsonObject().get("name")
 					.getAsString());
@@ -302,7 +334,15 @@ public class DataPersistence {
 
 		issuesEvent.setCreatedAt(root.get("created_at").getAsString());
 		issuesEvent.setIssueAction(payload.get("action").getAsString());
-
+		
+		/*Pattern artifactPattern = Pattern.compile("[a-zA-Z]+/[a-zA-Z]+/issues/[a-z[0-9]]+");
+		Matcher matcher = artifactPattern.matcher(issuesEvent.get);
+		if(matcher.find()){
+			issueCommentEvent.setArtifactId(matcher.group());
+		}*/
+		
+		
+		
 		return issuesEvent;
 	}
 
@@ -378,15 +418,22 @@ public class DataPersistence {
 				.getAsString());
 		pullrequestEvent.setPullrequestId(pullrequest.get("id").getAsString());
 
+		Pattern artifactPattern = Pattern.compile("[a-zA-Z]+/[a-zA-Z]+/pull/[a-z[0-9]]+");
+		Matcher matcher = artifactPattern.matcher(pullrequestEvent.getPullrequestHtmlUrl());
+		if(matcher.find()){
+			pullrequestEvent.setArtifactId(matcher.group());
+		}
+		
 		return pullrequestEvent;
-
+		
 	}
 
 	public Object constructPullRequestReviewCommentEvent(JsonObject root) {
-		System.out.println(root.toString());
+		System.out.println("PullRequestReviewComment" + root.toString());
 		PullRequestReviewCommentEvent pullRequestReviewCommentEvent = new PullRequestReviewCommentEvent();
 		JsonObject payload = root.get("payload").getAsJsonObject();
 		JsonObject comment = payload.getAsJsonObject("comment");
+
 		if (root.has("repo")) {
 			pullRequestReviewCommentEvent.setRepo(root.get("repo")
 					.getAsJsonObject().get("name").getAsString());
@@ -394,6 +441,7 @@ public class DataPersistence {
 			pullRequestReviewCommentEvent.setRepo(root.get("repository")
 					.getAsJsonObject().get("name").getAsString());
 		}
+
 		if (root.get("actor").isJsonObject()) {
 			JsonObject actor = root.get("actor").getAsJsonObject();
 			pullRequestReviewCommentEvent.setActor(actor.get("login")
@@ -402,11 +450,36 @@ public class DataPersistence {
 			pullRequestReviewCommentEvent.setActor(root.get("actor")
 					.getAsString());
 		}
+
 		pullRequestReviewCommentEvent.setCommentBody(comment.get("body")
 				.getAsString());
 		pullRequestReviewCommentEvent.setCreatedAt(root.get("created_at")
 				.getAsString());
 
+		// 如果有url则直接将url写到对象中，如果没有，则再次发送http请求，去取得该pullrequest所对应的html_url
+		if (root.has("url")) {
+			pullRequestReviewCommentEvent.setHtmlUrl(root.get("url")
+					.getAsString());
+			System.out.println("自带url..."+root.get("url").getAsString());
+		} else {
+			HtmlAnalyzer htmlAnalyzer = new HtmlAnalyzer();
+			try {
+				//将http请求回来的数据转化成json
+				JsonObject pullrequestJson = (JsonObject) new JsonParser()
+						.parse(htmlAnalyzer.getResource(comment.get("url")
+								.getAsString()));
+				System.out.println("请求得url..."+pullrequestJson.get("pull_request_url").getAsString());
+				pullRequestReviewCommentEvent.setHtmlUrl(pullrequestJson.get("pull_request_url").getAsString());
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		Pattern artifactPattern = Pattern.compile("[a-zA-Z]+/[a-zA-Z]+/pull/[a-z[0-9]]+");
+		Matcher matcher = artifactPattern.matcher(pullRequestReviewCommentEvent.getHtmlUrl());
+		if(matcher.find()){
+			pullRequestReviewCommentEvent.setArtifactId(matcher.group());
+		}
 		return pullRequestReviewCommentEvent;
 	}
 
@@ -444,7 +517,7 @@ public class DataPersistence {
 			}
 		}
 		if (pushEvent.getCommitMessage().equals("")) {
-			//System.out.println(root.toString());
+			// System.out.println(root.toString());
 		}
 		return pushEvent;
 	}

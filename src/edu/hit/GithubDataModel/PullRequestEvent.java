@@ -30,6 +30,8 @@ public class PullRequestEvent {
 	private String pullrequestBaseUser;
 	private String createdAt;
 	private String target;
+	private String artifactId;
+	
 	@Id
 	@GeneratedValue
 	public long getId() {
@@ -151,6 +153,12 @@ public class PullRequestEvent {
 	}
 	public void setCreatedAt(String createdAt) {
 		this.createdAt = createdAt;
+	}
+	public String getArtifactId() {
+		return artifactId;
+	}
+	public void setArtifactId(String artifactId) {
+		this.artifactId = artifactId;
 	}
 	
 	

@@ -75,8 +75,6 @@ public class DataCutter {
 		} else {
 			for (int i = 0; i < fileLength - offset; i++)
 				dst[i] = in.get(offset + i);
-			fc.close();
-			randomAccessFile.close();
 			fileScannedFinishFlag = true;
 		}
 		offset += BUFFER_SIZE;
@@ -161,9 +159,8 @@ public class DataCutter {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		fc.close();
 		randomAccessFile.close();
-		System.out.println("fc：" + fc.isOpen());
-
 		return resultList;
 	}
 
