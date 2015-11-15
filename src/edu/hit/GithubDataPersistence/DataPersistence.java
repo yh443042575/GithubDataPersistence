@@ -565,5 +565,19 @@ public class DataPersistence {
 
 		return followEvent;
 	}
-
+	
+	/*
+	 * 通过开发者每一次行为的谈话内容，识别出该行为是针对谁的
+	 */
+	private String findTargetByContent(String content){
+		
+		StringBuffer target = new StringBuffer("");
+		Pattern pattern = Pattern.compile("@[a-zA-Z]+");
+		Matcher matcher = pattern.matcher(content);
+		while(matcher.find()){
+			target.append(matcher.group()+"+");
+		}
+		return target.toString();
+	}
+	
 }
