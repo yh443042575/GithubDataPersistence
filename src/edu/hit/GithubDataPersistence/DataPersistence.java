@@ -259,7 +259,7 @@ public class DataPersistence {
 
 		if (issueCommentEvent.getCommentBody() == null
 				|| issueCommentEvent.getCommentBody().equals("")) {
-			System.out.println("issueCommentEvent联网解析中...");
+			System.out.println("issueCommentEvent联网解析中..."+" "+issueCommentEvent.getHtmlUrl());
 			htmlAnalyzer = new HtmlAnalyzer();
 			htmlResult = htmlAnalyzer
 					.getIssueCommentEventBodyByUrlAndCommentId(
