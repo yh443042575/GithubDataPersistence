@@ -1,0 +1,40 @@
+package edu.hit.yh.mine.algorithm;
+
+import java.util.List;
+
+
+import lombok.Getter;
+import lombok.Setter;
+
+/**
+ * 算法的一个抽象方法，其中T为行为模式
+ * @author DHAO
+ *
+ * @param <P> 行为模式，里面包含了一组行为的list
+ */
+public abstract class AbstractGspMiningAlgorithm<P> {
+
+	//算法的支持度
+	private int surpport;
+	
+	// 算法的总执行
+	public abstract void execute(Object... args);
+
+	//数据库的扫描
+	public abstract List<P> scanDB(List<P> patternlist);
+	
+	//连接操作
+	public abstract List<P> joinOperation(List<P> patternlist);
+
+	public int getSurpport() {
+		return surpport;
+	}
+
+	public void setSurpport(int surpport) {
+		this.surpport = surpport;
+	}
+	
+	
+	
+
+}
