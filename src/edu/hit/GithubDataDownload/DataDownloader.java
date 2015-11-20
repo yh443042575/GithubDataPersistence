@@ -21,6 +21,7 @@ import org.apache.commons.httpclient.methods.GetMethod;
 
 
 
+
 /**
  * 负责
  * 
@@ -75,8 +76,8 @@ public class DataDownloader {
 				 * 发送请求
 				 */
 				HttpClient httpClient = new HttpClient();
-				httpClient.getHttpConnectionManager().getParams()
-						.setSoTimeout(30000);
+				/*httpClient.getHttpConnectionManager().getConnection(arg0)
+						.setSoTimeout(30000);*/
 				httpClient.getHostConfiguration().setProxy("127.0.0.1", 8087);
 				try {
 					GetMethod method = new GetMethod(
